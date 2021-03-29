@@ -1,35 +1,36 @@
 const positions = ['TL', 'TM', 'TR', 'ML', 'MM', 'MR', 'BL', 'BM', 'BR']
-// new Set(1,2,3)
+
+const originalState = () => ({
+    player1: {
+        stones: ['TL', 'TM', 'TR'],
+        stoneMoves: {
+            0: [],
+            1: [],
+            2: []
+        },
+        movedAllStones: false,
+        score: 0
+    },
+    player2: {
+        stones: ['BL', 'BM', 'BR'],
+        stoneMoves: {
+            0: [],
+            1: [],
+            2: []
+        },
+        movedAllStones: false,
+        score: 0
+    },
+    currentPlayer: 'player1',
+    emptyTiles: ['ML', 'MM', 'MR'],
+    clickedTile: '',
+    preMoveStatus: false,
+    turns: 0,
+    gameOver: false
+})
 
 const store = {
-    state: {
-        player1: {
-            stones: ['TL', 'TM', 'TR'],
-            stoneMoves: {
-                0: [],
-                1: [],
-                2: []
-            },
-            movedAllStones: false,
-            score: 0
-        },
-        player2: {
-            stones: ['BL', 'BM', 'BR'],
-            stoneMoves: {
-                0: [],
-                1: [],
-                2: []
-            },
-            movedAllStones: false,
-            score: 0
-        },
-        currentPlayer: 'player1',
-        emptyTiles: ['ML', 'MM', 'MR'],
-        clickedTile: '',
-        preMoveStatus: false,
-        turns: 0,
-        gameOver: false
-    },
+    state: originalState(),
     getPlayerStones() {
         return {
             player1: this.state.player1.stones,
@@ -37,14 +38,15 @@ const store = {
         }
     },
     getCurrentPlayer(player) {
-        return (this.state.currentPlayer === player)
-            ? true
-            : false
+        return this.state.currentPlayer === player ? true : false
     },
     getValidTiles() {
         const playerStonesObj = this.getPlayerStones()
-        const playerStones = [...playerStonesObj.player1, ...playerStonesObj.player2]
-        return positions.filter(item => playerStones.indexOf(item) == -1)
+        const playerStones = [
+            ...playerStonesObj.player1,
+            ...playerStonesObj.player2
+        ]
+        return positions.filter((item) => playerStones.indexOf(item) == -1)
     },
     updateEmptyTiles() {
         this.state.emptyTiles = this.getValidTiles()
@@ -56,7 +58,7 @@ const store = {
      */
     checkMoves(position) {
         const { preMoveStatus, emptyTiles, clickedTile } = this.state
-        
+
         if (preMoveStatus) {
             for (const cell of emptyTiles) {
                 if (cell === position) {
@@ -64,6 +66,29 @@ const store = {
                 }
             }
         }
+    },
+    /**
+     * Return the current players score 
+     * @returns {number[]} a number array. First number is player1 score & the scond is player2 score 
+     */
+    getPlayerScore() {
+        const { player1, player2 } = this.state 
+        return [player1.score, player2.score]
+    },
+    /**
+     * Reset the gameboard leeping the scores
+     */
+    resetGame() {
+        const [player1Score, player2Score] = this.getPlayerScore()
+        const newState = originalState()
+        newState.player1.score = player1Score
+        newState.player2.score = player2Score
+        this.state.player1 = newState.player1
+        this.state.player2 = newState.player2
+        this.state.emptyTiles = newState.emptyTiles
+        this.state.turns = 0
+        this.state.clickedTile = ''
+        this.state.gameOver = false
     },
     /**
      * Increments turns and changes turns between players
@@ -74,29 +99,56 @@ const store = {
         this.state.clickedTile = ''
         this.state.preMoveStatus = false
         const gameWon = this.checkWinCondition()
-        
+
         if (gameWon) {
             alert(`${currentPlayer} WON!!`)
             this.state.gameOver = true
             this.state[currentPlayer].score += 1
-        }
-        else {
-            currentPlayer === 'player1' ? this.state.currentPlayer = 'player2' : this.state.currentPlayer = 'player1'
+            this.resetGame()
+            return
+        } else {
+            currentPlayer === 'player1'
+                ? (this.state.currentPlayer = 'player2')
+                : (this.state.currentPlayer = 'player1')
         }
     },
     checkWinCondition() {
         const { currentPlayer } = this.state
 
-        const row1Condition = this.state[currentPlayer].stones.includes('TL') && this.state[currentPlayer].stones.includes('TM') && this.state[currentPlayer].stones.includes('TR')
-        const row2Condition = this.state[currentPlayer].stones.includes('ML') && this.state[currentPlayer].stones.includes('MM') && this.state[currentPlayer].stones.includes('MR')
-        const row3Condition = this.state[currentPlayer].stones.includes('BL') && this.state[currentPlayer].stones.includes('BM') && this.state[currentPlayer].stones.includes('BR')
-        const col1Condition = this.state[currentPlayer].stones.includes('TL') && this.state[currentPlayer].stones.includes('ML') && this.state[currentPlayer].stones.includes('BL')
-        const col2Condition = this.state[currentPlayer].stones.includes('TM') && this.state[currentPlayer].stones.includes('MM') && this.state[currentPlayer].stones.includes('BM')
-        const col3Condition = this.state[currentPlayer].stones.includes('TR') && this.state[currentPlayer].stones.includes('MR') && this.state[currentPlayer].stones.includes('BR')
-        
-        return this.state[currentPlayer].movedAllStones 
-        && 
-        (row1Condition || row2Condition || row3Condition || col1Condition || col2Condition || col3Condition)
+        const row1Condition =
+            this.state[currentPlayer].stones.includes('TL') &&
+            this.state[currentPlayer].stones.includes('TM') &&
+            this.state[currentPlayer].stones.includes('TR')
+        const row2Condition =
+            this.state[currentPlayer].stones.includes('ML') &&
+            this.state[currentPlayer].stones.includes('MM') &&
+            this.state[currentPlayer].stones.includes('MR')
+        const row3Condition =
+            this.state[currentPlayer].stones.includes('BL') &&
+            this.state[currentPlayer].stones.includes('BM') &&
+            this.state[currentPlayer].stones.includes('BR')
+        const col1Condition =
+            this.state[currentPlayer].stones.includes('TL') &&
+            this.state[currentPlayer].stones.includes('ML') &&
+            this.state[currentPlayer].stones.includes('BL')
+        const col2Condition =
+            this.state[currentPlayer].stones.includes('TM') &&
+            this.state[currentPlayer].stones.includes('MM') &&
+            this.state[currentPlayer].stones.includes('BM')
+        const col3Condition =
+            this.state[currentPlayer].stones.includes('TR') &&
+            this.state[currentPlayer].stones.includes('MR') &&
+            this.state[currentPlayer].stones.includes('BR')
+
+        return (
+            this.state[currentPlayer].movedAllStones &&
+            (row1Condition ||
+                row2Condition ||
+                row3Condition ||
+                col1Condition ||
+                col2Condition ||
+                col3Condition)
+        )
     },
     /**
      * Checks if all the stones of the current player have been moved from their original row tiles
@@ -105,21 +157,45 @@ const store = {
         const { currentPlayer } = this.state
         const check = (index) => {
             if (currentPlayer === 'player1')
-                return this.state[currentPlayer].stoneMoves[index].includes('ML')
-                || this.state[currentPlayer].stoneMoves[index].includes('MM')
-                || this.state[currentPlayer].stoneMoves[index].includes('MR')
-                || this.state[currentPlayer].stoneMoves[index].includes('BL')
-                || this.state[currentPlayer].stoneMoves[index].includes('BM')
-                || this.state[currentPlayer].stoneMoves[index].includes('BR')
-            else 
-                return this.state[currentPlayer].stoneMoves[index].includes('ML')
-                || this.state[currentPlayer].stoneMoves[index].includes('MM')
-                || this.state[currentPlayer].stoneMoves[index].includes('MR')
-                || this.state[currentPlayer].stoneMoves[index].includes('TL')
-                || this.state[currentPlayer].stoneMoves[index].includes('TM')
-                || this.state[currentPlayer].stoneMoves[index].includes('TR')
+                return (
+                    this.state[currentPlayer].stoneMoves[index].includes(
+                        'ML'
+                    ) ||
+                    this.state[currentPlayer].stoneMoves[index].includes(
+                        'MM'
+                    ) ||
+                    this.state[currentPlayer].stoneMoves[index].includes(
+                        'MR'
+                    ) ||
+                    this.state[currentPlayer].stoneMoves[index].includes(
+                        'BL'
+                    ) ||
+                    this.state[currentPlayer].stoneMoves[index].includes(
+                        'BM'
+                    ) ||
+                    this.state[currentPlayer].stoneMoves[index].includes('BR')
+                )
+            else
+                return (
+                    this.state[currentPlayer].stoneMoves[index].includes(
+                        'ML'
+                    ) ||
+                    this.state[currentPlayer].stoneMoves[index].includes(
+                        'MM'
+                    ) ||
+                    this.state[currentPlayer].stoneMoves[index].includes(
+                        'MR'
+                    ) ||
+                    this.state[currentPlayer].stoneMoves[index].includes(
+                        'TL'
+                    ) ||
+                    this.state[currentPlayer].stoneMoves[index].includes(
+                        'TM'
+                    ) ||
+                    this.state[currentPlayer].stoneMoves[index].includes('TR')
+                )
         }
-        if (check(0) && check(1) && check(2)) 
+        if (check(0) && check(1) && check(2))
             this.state[currentPlayer].movedAllStones = true
     },
     /**
@@ -129,10 +205,14 @@ const store = {
      */
     updateStonePosition(oldPosition, newPosition) {
         const { currentPlayer } = this.state
-        const oldPositionIndex = this.state[currentPlayer].stones.indexOf(oldPosition)
-        
+        const oldPositionIndex = this.state[currentPlayer].stones.indexOf(
+            oldPosition
+        )
+
         if (!this.state[currentPlayer].movedAllStones) {
-            this.state[currentPlayer].stoneMoves[oldPositionIndex].push(newPosition)
+            this.state[currentPlayer].stoneMoves[oldPositionIndex].push(
+                newPosition
+            )
             this.checkPreWinCondition()
         }
 
@@ -168,8 +248,7 @@ Vue.component('Stone', {
                             <i class="pe-7s-${icon} pe-5x pe-va pe-stack-2x" style="font-weight:600"></i>
                             <i class="pe-7s-lock pe-stack-1x" style="font-weight:600"></i>
                         </span>`
-                    }
-                    else {
+                    } else {
                         return `<i class="pe-7s-${icon} pe-5x pe-va" style="font-weight:600"></i>`
                     }
                 }
@@ -179,11 +258,10 @@ Vue.component('Stone', {
                             <i class="pe-7s-${icon} pe-5x pe-va pe-stack-2x"></i>
                             <i class="pe-7s-lock pe-stack-1x"></i>
                         </span>`
-                    }
-                    else {
+                    } else {
                         return `<i class="pe-7s-${icon} pe-5x pe-va"></i>`
                     }
-                } 
+                }
                 return `<i class="pe-7s-${icon} pe-5x pe-va"></i>`
             }
             return this.player === 'player1'
@@ -191,9 +269,8 @@ Vue.component('Stone', {
                     ? iconator('', 'gym')
                     : iconator('', 'gym')
                 : currPlayer === 'player2'
-                    ? iconator('', 'coffee')
-                    : iconator('', 'coffee')
-
+                ? iconator('', 'coffee')
+                : iconator('', 'coffee')
         }
     },
     template: `
@@ -240,8 +317,7 @@ Vue.component('Cell', {
                             store.state.clickedTile = this.position
                             store.state.preMoveStatus = true
                             return
-                        }
-                        else {
+                        } else {
                             store.state.clickedTile = ''
                             store.state.preMoveStatus = false
                             return
@@ -250,17 +326,14 @@ Vue.component('Cell', {
                 }
 
                 store.checkMoves(this.position)
-
-            }
-            else {
+            } else {
                 for (const stone of p2Stones) {
                     if (stone === this.position) {
                         if (!preMoveStatus) {
                             store.state.clickedTile = this.position
                             store.state.preMoveStatus = true
                             return
-                        }
-                        else {
+                        } else {
                             store.state.clickedTile = ''
                             store.state.preMoveStatus = false
                             return
@@ -269,7 +342,6 @@ Vue.component('Cell', {
                 }
                 store.checkMoves(this.position)
             }
-
         },
         preMovePhase: function () {
             const { preMoveStatus, emptyTiles } = store.state
@@ -290,9 +362,7 @@ Vue.component('Board', {
             positions: ['TL', 'TM', 'TR', 'ML', 'MM', 'MR', 'BL', 'BM', 'BR']
         }
     },
-    methods: {
-
-    },
+    methods: {},
     template: `
     <div class="board">
         <cell v-for="pos in positions" :position="pos" :key="pos"></cell>
@@ -307,17 +377,13 @@ const Home = Vue.component('Home', {
     },
     methods: {
         checkLock: function (player) {
-            return (store.state[player].movedAllStones)
-                ? false
-                : true
+            return store.state[player].movedAllStones ? false : true
         },
         getCurrentPlayer: function (player) {
-            return (store.state.currentPlayer === player)
-                ? true
-                : false
+            return store.state.currentPlayer === player ? true : false
         },
         getScore: function (player) {
-            return (player === 'player1')
+            return player === 'player1'
                 ? store.state.player1.score
                 : store.state.player2.score
         }
@@ -355,5 +421,7 @@ const app = new Vue({
             return Home
         }
     },
-    render(h) { return h(this.ViewComponent) }
+    render(h) {
+        return h(this.ViewComponent)
+    }
 })

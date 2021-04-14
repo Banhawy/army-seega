@@ -1,5 +1,5 @@
 # army-seega
-This is a web-based offilne board game app I made while I was in the army to play with my peers, since we didnt have internet access or any installed games.
+This is a web-based offilne board game app I made while I was in the army to play with my peers, since we didn't have internet access or any installed games.
 
 To my knowledge, this is an *ancient* Egyptian game that goes back to age of the Pharaohs. 
 

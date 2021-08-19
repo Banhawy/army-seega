@@ -1,6 +1,8 @@
 # army-seega
 This is a web-based offilne board game app I made while I was in the army to play with my peers, since we didn't have internet access or any installed games.
 
+[View Live Demo](https://banhawy.github.io/army-seega/)
+
 To my knowledge, this is an *ancient* Egyptian game that goes back to age of the Pharaohs. 
 
 It is commonly played these days by Egyptian soldiers using stones and lines drawn in the sand.
